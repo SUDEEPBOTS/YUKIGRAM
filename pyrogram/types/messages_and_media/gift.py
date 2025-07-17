@@ -575,7 +575,7 @@ class Gift(Object):
             )
         )
 
-    async def buy(self) -> Optional["types.Message"]:
+    async def buy(self, star_count: Optional[int] = None) -> Optional["types.Message"]:
         """Bound method *buy* of :obj:`~pyrogram.types.Gift`.
 
         .. note::
@@ -598,7 +598,8 @@ class Gift(Object):
         """
         return await self._client.send_resold_gift(
             gift_link=self.link,
-            new_owner_chat_id="me"
+            new_owner_chat_id="me",
+            star_count=star_count
         )
 
     async def send(
