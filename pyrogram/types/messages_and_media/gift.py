@@ -101,10 +101,10 @@ class Gift(Object):
         resale_price (``int``, *optional*):
             Number of Telegram Stars that must be paid to buy the gift and send it to someone else.
 
-        last_resale_price (``int``, *optional*):
+        last_resale_star_count (``int``, *optional*):
             Number of Telegram Stars that were paid by the sender for the gift; 0 if the gift was upgraded or transferred.
 
-        last_ton_resale_price (``int``, *optional*):
+        last_resale_ton_count (``int``, *optional*):
             Number of TON that were paid by the sender for the gift.
 
         number (``int``, *optional*):
@@ -195,8 +195,8 @@ class Gift(Object):
         upgrade_price: Optional[int] = None,
         transfer_price: Optional[int] = None,
         resale_price: Optional[int] = None,
-        last_resale_price: Optional[int] = None,
-        last_ton_resale_price: Optional[int] = None,
+        last_resale_star_count: Optional[int] = None,
+        last_resale_ton_count: Optional[int] = None,
         upgrade_message_id: Optional[int] = None,
         name: Optional[str] = None,
         title: Optional[str] = None,
@@ -242,8 +242,8 @@ class Gift(Object):
         self.upgrade_price = upgrade_price
         self.transfer_price = transfer_price
         self.resale_price = resale_price
-        self.last_resale_price = last_resale_price
-        self.last_ton_resale_price = last_ton_resale_price
+        self.last_resale_star_count = last_resale_star_count
+        self.last_resale_ton_count = last_resale_ton_count
         self.upgrade_message_id = upgrade_message_id
         self.name = name
         self.title = title
@@ -321,15 +321,15 @@ class Gift(Object):
 
         owner_id = utils.get_raw_peer_id(star_gift.owner_id)
 
-        last_resale_price = None
-        last_ton_resale_price = None
+        last_resale_star_count = None
+        last_resale_ton_count = None
 
         if star_gift.resell_amount:
             for currency in star_gift.resell_amount:
                 if isinstance(currency, raw.types.StarsAmount):
-                    last_resale_price = currency.amount
+                    last_resale_star_count = currency.amount
                 elif isinstance(currency, raw.types.StarsTonAmount):
-                    last_ton_resale_price = currency.amount
+                    last_resale_ton_count = currency.amount
 
         return Gift(
             id=star_gift.id,
@@ -345,8 +345,8 @@ class Gift(Object):
             owner_name=star_gift.owner_name,
             owner_address=star_gift.owner_address,
             gift_address=star_gift.gift_address,
-            last_resale_price=last_resale_price,
-            last_ton_resale_price=last_ton_resale_price,
+            last_resale_star_count=last_resale_star_count,
+            last_resale_ton_count=last_resale_ton_count,
             is_upgraded=True,
             raw=star_gift,
             client=client
@@ -430,7 +430,14 @@ class Gift(Object):
             parsed_gift.can_transfer_at = utils.timestamp_to_datetime(action.can_transfer_at)
             parsed_gift.can_resell_at = utils.timestamp_to_datetime(action.can_resell_at)
             parsed_gift.transfer_price = action.transfer_stars
-            parsed_gift.last_resale_star_count = action.resale_stars
+
+            if action.resale_amount:
+                for currency in action.resale_amount:
+                    if isinstance(currency, raw.types.StarsAmount):
+                        parsed_gift.last_resale_star_count = currency.amount
+                    elif isinstance(currency, raw.types.StarsTonAmount):
+                        parsed_gift.last_resale_ton_count = currency.amount
+
             parsed_gift.upgrade_message_id = message.id
 
 
