@@ -260,6 +260,8 @@ def pyrogram_api():
             get_messages
             get_scheduled_messages
             get_stickers
+            get_web_app_link_url
+            get_web_app_url
             mark_checklist_tasks_as_done
             get_media_group
             get_chat_history
