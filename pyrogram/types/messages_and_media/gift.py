@@ -432,11 +432,10 @@ class Gift(Object):
             parsed_gift.transfer_price = action.transfer_stars
 
             if action.resale_amount:
-                for currency in action.resale_amount:
-                    if isinstance(currency, raw.types.StarsAmount):
-                        parsed_gift.last_resale_star_count = currency.amount
-                    elif isinstance(currency, raw.types.StarsTonAmount):
-                        parsed_gift.last_resale_ton_count = currency.amount
+                if isinstance(action.resale_amount, raw.types.StarsAmount):
+                    parsed_gift.last_resale_star_count = action.resale_amount.amount
+                elif isinstance(action.resale_amount, raw.types.StarsTonAmount):
+                    parsed_gift.last_resale_ton_count = action.resale_amount.amount
 
             parsed_gift.upgrade_message_id = message.id
 
