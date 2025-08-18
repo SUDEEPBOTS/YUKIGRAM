@@ -61,7 +61,7 @@ class SuggestedPostInfo(Object):
 
         if suggested_post.accepted:
             state = enums.SuggestedPostState.APPROVED
-        elif suggested_post.declined:
+        elif suggested_post.rejected:
             state = enums.SuggestedPostState.DECLINED
         else:
             state = enums.SuggestedPostState.PENDING
