@@ -313,7 +313,7 @@ def get_raw_peer_id(peer: Union[raw.base.Peer, raw.base.InputPeer, raw.base.Requ
     if hasattr(peer, "channel_id"):
         return peer.channel_id
 
-    raise ValueError(f"Peer type invalid: {peer}")
+    return None
 
 
 def get_peer_id(peer: Union[raw.base.Peer, raw.base.InputPeer, raw.base.RequestedPeer]) -> int:
