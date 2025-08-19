@@ -42,12 +42,12 @@ from pyrogram.errors import (
     BadRequest,
     CDNFileHashMismatch,
     ChannelPrivate,
-    EmailNotAllowed,
     FloodPremiumWait,
     FloodWait,
     PersistentTimestampInvalid,
     PersistentTimestampOutdated,
     SessionPasswordNeeded,
+    Unauthorized,
     VolumeLocNotFound,
 )
 from pyrogram.handlers.handler import Handler
@@ -483,7 +483,16 @@ class Client(Methods):
 
             while True:
                 try:
-                    email = await ainput("Enter email: ", loop=self.loop)
+                    while True:
+                        email = await ainput("Enter email: ", loop=self.loop)
+
+                        if not email:
+                            continue
+
+                        confirm = await ainput(f'Is "{email}" correct? (y/N): ', loop=self.loop)
+
+                        if confirm.lower() == "y":
+                            break
 
                     await self.invoke(
                         raw.functions.account.SendVerifyEmailCode(
@@ -497,19 +506,22 @@ class Client(Methods):
 
                     email_code = await ainput("Enter confirmation code: ", loop=self.loop)
 
-                    try:
-                        await self.invoke(
-                            raw.functions.account.VerifyEmail(
-                                purpose=raw.types.EmailVerifyPurposeLoginSetup(
-                                    phone_number=self.phone_number,
-                                    phone_code_hash=sent_code.phone_code_hash,
-                                ),
-                                verification=raw.types.EmailVerificationCode(code=email_code),
-                            )
+                    email_sent_code = await self.invoke(
+                        raw.functions.account.VerifyEmail(
+                            purpose=raw.types.EmailVerifyPurposeLoginSetup(
+                                phone_number=self.phone_number,
+                                phone_code_hash=sent_code.phone_code_hash,
+                            ),
+                            verification=raw.types.EmailVerificationCode(code=email_code),
                         )
-                    except EmailNotAllowed:
-                        print("This email is not allowed for authorization")
-                        continue
+                    )
+
+                    if isinstance(email_sent_code, raw.types.account.EmailVerifiedLogin):
+                        if isinstance(email_sent_code.sent_code, raw.types.auth.SentCodePaymentRequired):
+                            raise Unauthorized(
+                                "You need to pay for or purchase premium to continue authorization "
+                                "process, which is currently not supported by Pyrogram."
+                            )
                 except BadRequest as e:
                     print(e.MESSAGE)
                 else:
