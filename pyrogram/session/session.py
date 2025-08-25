@@ -516,7 +516,8 @@ class Session:
         query: TLObject,
         retries: int = MAX_RETRIES,
         timeout: float = WAIT_TIMEOUT,
-        sleep_threshold: float = SLEEP_THRESHOLD
+        sleep_threshold: float = SLEEP_THRESHOLD,
+        retry_delay: float = RETRY_DELAY
     ):
         try:
             await asyncio.wait_for(self.is_started.wait(), self.WAIT_TIMEOUT)
@@ -554,7 +555,7 @@ class Session:
                     '[%s] Retrying "%s" due to: %s', attempt, query_name, str(e) or repr(e)
                 )
 
-                await asyncio.sleep(self.RETRY_DELAY)
+                await asyncio.sleep(retry_delay)
 
         raise TimeoutError(f'Failed to invoke "{query_name}" after {retries} retries')
 
