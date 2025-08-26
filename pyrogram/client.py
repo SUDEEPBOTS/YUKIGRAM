@@ -54,7 +54,7 @@ from pyrogram.handlers.handler import Handler
 from pyrogram.methods import Methods
 from pyrogram.qrlogin import QRLogin
 from pyrogram.session import Auth, Session
-from pyrogram.storage import FileStorage, MemoryStorage, Storage
+from pyrogram.storage import SQLiteStorage, Storage
 from pyrogram.types import LinkPreviewOptions, TermsOfService, User
 from pyrogram.utils import ainput
 
@@ -357,13 +357,18 @@ class Client(Methods):
         self.storage: Storage
 
         if self.session_string:
-            self.storage = MemoryStorage(self.name, self.session_string)
+            self.storage = SQLiteStorage(
+                self.name,
+                workdir=self.workdir,
+                session_string=self.session_string,
+                in_memory=True
+            )
         elif self.in_memory:
-            self.storage = MemoryStorage(self.name)
+            self.storage = SQLiteStorage(self.name, workdir=self.workdir, in_memory=True)
         elif isinstance(storage_engine, Storage):
             self.storage = storage_engine
         else:
-            self.storage = FileStorage(self.name, self.workdir)
+            self.storage = SQLiteStorage(self.name, workdir=self.workdir)
 
         self.dispatcher: Dispatcher = Dispatcher(self)
 

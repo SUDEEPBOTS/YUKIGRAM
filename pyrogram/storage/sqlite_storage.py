@@ -16,14 +16,22 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
+import base64
 import inspect
+import logging
 import sqlite3
+import struct
 import time
-from typing import List, Tuple, Any
+from pathlib import Path
+from typing import Any, List, Optional, Tuple
 
 from pyrogram import raw
-from .storage import Storage
+
 from .. import utils
+from .storage import Storage
+
+log = logging.getLogger(__name__)
+
 
 # language=SQLite
 SCHEMA = """
@@ -83,6 +91,28 @@ BEGIN
 END;
 """
 
+USERNAMES_SCHEMA = """
+CREATE TABLE usernames
+(
+    id       INTEGER,
+    username TEXT,
+    FOREIGN KEY (id) REFERENCES peers(id)
+);
+
+CREATE INDEX idx_usernames_username ON usernames (username);
+"""
+
+UPDATE_STATE_SCHEMA = """
+CREATE TABLE update_state
+(
+    id   INTEGER PRIMARY KEY,
+    pts  INTEGER,
+    qts  INTEGER,
+    date INTEGER,
+    seq  INTEGER
+);
+"""
+
 
 def get_input_peer(peer_id: int, access_hash: int, peer_type: str):
     if peer_type in ["user", "bot"]:
@@ -108,28 +138,143 @@ def get_input_peer(peer_id: int, access_hash: int, peer_type: str):
 class SQLiteStorage(Storage):
     VERSION = 6
     USERNAME_TTL = 8 * 60 * 60
+    FILE_EXTENSION = ".session"
 
-    def __init__(self, name: str):
+    def __init__(
+        self,
+        name: str,
+        workdir: Path,
+        session_string: Optional[str] = None,
+        in_memory: Optional[bool] = False,
+        use_wal: Optional[bool] = False,
+    ):
         super().__init__(name)
 
-        self.conn = None  # type: sqlite3.Connection
+        self.conn = None # type: sqlite3.Connection
+
+        self.session_string = session_string
+        self.in_memory = in_memory
+        self.use_wal = use_wal
+
+        if self.in_memory:
+            self.database = ":memory:"
+        else:
+            self.database = workdir / (self.name + self.FILE_EXTENSION)
+
+    def update(self):
+        version = self.version()
+
+        if version == 1:
+            with self.conn:
+                self.conn.execute("DELETE FROM peers")
+
+            version += 1
+
+        if version == 2:
+            with self.conn:
+                self.conn.execute("ALTER TABLE sessions ADD api_id INTEGER")
+
+            version += 1
+
+        if version == 3:
+            with self.conn:
+                self.conn.executescript(USERNAMES_SCHEMA)
+
+            version += 1
+
+        if version == 4:
+            with self.conn:
+                self.conn.executescript(UPDATE_STATE_SCHEMA)
+
+            version += 1
+
+        if version == 5:
+            with self.conn:
+                self.conn.execute("CREATE INDEX idx_usernames_id ON usernames (id);")
+
+            version += 1
+
+        self.version(version)
 
     def create(self):
         with self.conn:
             self.conn.executescript(SCHEMA)
 
-            self.conn.execute(
-                "INSERT INTO version VALUES (?)",
-                (self.VERSION,)
-            )
+            self.conn.execute("INSERT INTO version VALUES (?)", (self.VERSION,))
 
             self.conn.execute(
                 "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (2, None, None, None, 0, None, None)
+                (2, None, None, None, 0, None, None),
             )
 
     async def open(self):
-        raise NotImplementedError
+        if self.in_memory:
+            self.conn = sqlite3.connect(":memory:", timeout=1, check_same_thread=False)
+            self.create()
+
+            if self.session_string:
+                # Old format
+                if len(self.session_string) in [
+                    self.SESSION_STRING_SIZE,
+                    self.SESSION_STRING_SIZE_64,
+                ]:
+                    dc_id, test_mode, auth_key, user_id, is_bot = struct.unpack(
+                        (
+                            self.OLD_SESSION_STRING_FORMAT
+                            if len(self.session_string) == self.SESSION_STRING_SIZE
+                            else self.OLD_SESSION_STRING_FORMAT_64
+                        ),
+                        base64.urlsafe_b64decode(
+                            self.session_string + "=" * (-len(self.session_string) % 4)
+                        ),
+                    )
+
+                    await self.dc_id(dc_id)
+                    await self.test_mode(test_mode)
+                    await self.auth_key(auth_key)
+                    await self.user_id(user_id)
+                    await self.is_bot(is_bot)
+                    await self.date(0)
+
+                    log.warning(
+                        "You are using an old session string format. Use export_session_string to update"
+                    )
+                    return
+
+                dc_id, api_id, test_mode, auth_key, user_id, is_bot = struct.unpack(
+                    self.SESSION_STRING_FORMAT,
+                    base64.urlsafe_b64decode(
+                        self.session_string + "=" * (-len(self.session_string) % 4)
+                    ),
+                )
+
+                await self.dc_id(dc_id)
+                await self.api_id(api_id)
+                await self.test_mode(test_mode)
+                await self.auth_key(auth_key)
+                await self.user_id(user_id)
+                await self.is_bot(is_bot)
+                await self.date(0)
+
+            return
+
+        path = self.database
+        file_exists = isinstance(path, Path) and path.is_file()
+
+        self.conn = sqlite3.connect(str(path), timeout=1, check_same_thread=False)
+
+        if self.use_wal:
+            self.conn.execute("PRAGMA journal_mode=WAL")
+        else:
+            self.conn.execute("PRAGMA journal_mode=DELETE")
+
+        if file_exists:
+            self.update()
+        else:
+            self.create()
+
+        with self.conn:
+            self.conn.execute("VACUUM")
 
     async def save(self):
         await self.date(int(time.time()))
@@ -139,48 +284,39 @@ class SQLiteStorage(Storage):
         self.conn.close()
 
     async def delete(self):
-        raise NotImplementedError
+        if not self.in_memory:
+            Path(self.database).unlink()
 
     async def update_peers(self, peers: List[Tuple[int, int, str, str]]):
         self.conn.executemany(
-            "REPLACE INTO peers (id, access_hash, type, phone_number) VALUES (?, ?, ?, ?)",
-            peers
+            "REPLACE INTO peers (id, access_hash, type, phone_number) VALUES (?, ?, ?, ?)", peers
         )
 
     async def update_usernames(self, usernames: List[Tuple[int, List[str]]]):
-        self.conn.executemany(
-            "DELETE FROM usernames WHERE id = ?",
-            [(id,) for id, _ in usernames]
-        )
+        self.conn.executemany("DELETE FROM usernames WHERE id = ?", [(id,) for id, _ in usernames])
 
         self.conn.executemany(
             "REPLACE INTO usernames (id, username) VALUES (?, ?)",
-            [(id, username) for id, usernames in usernames for username in usernames]
+            [(id, username) for id, usernames in usernames for username in usernames],
         )
 
     async def update_state(self, value: Tuple[int, int, int, int, int] = object):
         if value == object:
             return self.conn.execute(
-                "SELECT id, pts, qts, date, seq FROM update_state "
-                "ORDER BY date ASC"
+                "SELECT id, pts, qts, date, seq FROM update_state ORDER BY date ASC"
             ).fetchall()
         else:
             if isinstance(value, int):
-                self.conn.execute(
-                    "DELETE FROM update_state WHERE id = ?",
-                    (value,)
-                )
+                self.conn.execute("DELETE FROM update_state WHERE id = ?", (value,))
             else:
                 self.conn.execute(
-                    "REPLACE INTO update_state (id, pts, qts, date, seq)"
-                    "VALUES (?, ?, ?, ?, ?)",
-                    value
+                    "REPLACE INTO update_state (id, pts, qts, date, seq)VALUES (?, ?, ?, ?, ?)",
+                    value,
                 )
 
     async def get_peer_by_id(self, peer_id: int):
         r = self.conn.execute(
-            "SELECT id, access_hash, type FROM peers WHERE id = ?",
-            (peer_id,)
+            "SELECT id, access_hash, type FROM peers WHERE id = ?", (peer_id,)
         ).fetchone()
 
         if r is None:
@@ -194,7 +330,7 @@ class SQLiteStorage(Storage):
             "JOIN usernames u ON p.id = u.id "
             "WHERE u.username = ? "
             "ORDER BY p.last_update_on DESC",
-            (username,)
+            (username,),
         ).fetchone()
 
         if r is None:
@@ -207,8 +343,7 @@ class SQLiteStorage(Storage):
 
     async def get_peer_by_phone_number(self, phone_number: str):
         r = self.conn.execute(
-            "SELECT id, access_hash, type FROM peers WHERE phone_number = ?",
-            (phone_number,)
+            "SELECT id, access_hash, type FROM peers WHERE phone_number = ?", (phone_number,)
         ).fetchone()
 
         if r is None:
@@ -219,18 +354,13 @@ class SQLiteStorage(Storage):
     def _get(self):
         attr = inspect.stack()[2].function
 
-        return self.conn.execute(
-            f"SELECT {attr} FROM sessions"
-        ).fetchone()[0]
+        return self.conn.execute(f"SELECT {attr} FROM sessions").fetchone()[0]
 
     def _set(self, value: Any):
         attr = inspect.stack()[2].function
 
         with self.conn:
-            self.conn.execute(
-                f"UPDATE sessions SET {attr} = ?",
-                (value,)
-            )
+            self.conn.execute(f"UPDATE sessions SET {attr} = ?", (value,))
 
     def _accessor(self, value: Any = object):
         return self._get() if value == object else self._set(value)
@@ -258,12 +388,7 @@ class SQLiteStorage(Storage):
 
     def version(self, value: int = object):
         if value == object:
-            return self.conn.execute(
-                "SELECT number FROM version"
-            ).fetchone()[0]
+            return self.conn.execute("SELECT number FROM version").fetchone()[0]
         else:
             with self.conn:
-                self.conn.execute(
-                    "UPDATE version SET number = ?",
-                    (value,)
-                )
+                self.conn.execute("UPDATE version SET number = ?", (value,))
