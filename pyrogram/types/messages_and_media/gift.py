@@ -71,6 +71,9 @@ class Gift(Object):
         last_sale_date (:py:obj:`~datetime.datetime`, *optional*):
             Date when the star gift was last purchased.
 
+        locked_until_date (:py:obj:`~datetime.datetime`, *optional*):
+            Date when the star gift will be available for purchase.
+
         from_user (:obj:`~pyrogram.types.User`, *optional*):
             User who sent the star gift.
 
@@ -189,6 +192,7 @@ class Gift(Object):
         date: Optional[datetime] = None,
         first_sale_date: Optional[datetime] = None,
         last_sale_date: Optional[datetime] = None,
+        locked_until_date: Optional[datetime] = None,
         from_user: Optional["types.User"] = None,
         owner: Optional["types.Chat"] = None,
         owner_name: Optional[str] = None,
@@ -238,6 +242,7 @@ class Gift(Object):
         self.date = date
         self.first_sale_date = first_sale_date
         self.last_sale_date = last_sale_date
+        self.locked_until_date = locked_until_date
         self.from_user = from_user
         self.owner = owner
         self.owner_name = owner_name
@@ -316,6 +321,7 @@ class Gift(Object):
             is_premium=star_gift.require_premium,
             first_sale_date=utils.timestamp_to_datetime(star_gift.first_sale_date),
             last_sale_date=utils.timestamp_to_datetime(star_gift.last_sale_date),
+            locked_until_date=utils.timestamp_to_datetime(star_gift.locked_until_date),
             publisher_chat=types.Chat._parse_chat(client, chats.get(utils.get_raw_peer_id(star_gift.released_by))),
             raw=star_gift,
             client=client
