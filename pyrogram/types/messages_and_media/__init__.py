@@ -46,6 +46,7 @@ from .forum_topic_reopened import ForumTopicReopened
 from .game import Game
 from .general_forum_topic_hidden import GeneralForumTopicHidden
 from .general_forum_topic_unhidden import GeneralForumTopicUnhidden
+from .gift_collection import GiftCollection
 from .gift_code import GiftCode
 from .gift_purchase_limit import GiftPurchaseLimit
 from .gift_resale_parameters import GiftResaleParameters
@@ -155,6 +156,7 @@ __all__ = [
     "Game",
     "GeneralForumTopicHidden",
     "GeneralForumTopicUnhidden",
+    "GiftCollection",
     "GiftCode",
     "GiftPurchaseLimit",
     "GiftResaleParameters",

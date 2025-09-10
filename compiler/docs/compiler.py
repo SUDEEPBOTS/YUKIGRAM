@@ -433,6 +433,14 @@ def pyrogram_api():
             get_available_gifts
             get_chat_gifts
             get_chat_gifts_count
+            add_collection_gifts
+            create_gift_collection
+            delete_gift_collection
+            get_gift_collections
+            remove_collection_gifts
+            reorder_collection_gifts
+            reorder_gift_collections
+            set_gift_collection_name
             get_gift_upgrade_preview
             get_payment_form
             get_stars_balance
@@ -712,6 +720,7 @@ def pyrogram_api():
             GiveawayWinners
             Invoice
             LinkPreviewOptions
+            GiftCollection
             GiftCode
             GiftPurchaseLimit
             GiftResaleParameters
