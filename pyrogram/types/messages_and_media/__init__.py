@@ -115,6 +115,7 @@ from .upgraded_gift_attribute_id_backdrop import UpgradedGiftAttributeIdBackdrop
 from .upgraded_gift_attribute_id_model import UpgradedGiftAttributeIdModel
 from .upgraded_gift_attribute_id_symbol import UpgradedGiftAttributeIdSymbol
 from .upgraded_gift_attribute_id import UpgradedGiftAttributeId
+from .upgraded_gift_value_info import UpgradedGiftValueInfo
 from .venue import Venue
 from .video import Video
 from .video_note import VideoNote
@@ -227,6 +228,7 @@ __all__ = [
     "UpgradedGiftAttributeIdModel",
     "UpgradedGiftAttributeIdSymbol",
     "UpgradedGiftAttributeId",
+    "UpgradedGiftValueInfo",
     "Venue",
     "Video",
     "VideoNote",

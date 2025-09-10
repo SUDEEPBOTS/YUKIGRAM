@@ -427,6 +427,7 @@ def pyrogram_api():
         payments="""
         Payments
             apply_gift_code
+            buy_gift_upgrade
             check_gift_code
             convert_gift_to_stars
             get_available_gifts
@@ -436,6 +437,7 @@ def pyrogram_api():
             get_payment_form
             get_stars_balance
             get_ton_balance
+            get_upgraded_gift_value_info
             get_upgraded_gift
             gift_premium_with_stars
             hide_gift
@@ -759,6 +761,7 @@ def pyrogram_api():
             ChatTheme
             GiftedStars
             GiftedTon
+            UpgradedGiftValueInfo
             UpgradedGiftAttributeId
             UpgradedGiftAttributeIdModel
             UpgradedGiftAttributeIdSymbol

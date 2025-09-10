@@ -17,6 +17,7 @@
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from .apply_gift_code import ApplyGiftCode
+from .buy_gift_upgrade import BuyGiftUpgrade
 from .check_gift_code import CheckGiftCode
 from .convert_gift_to_stars import ConvertGiftToStars
 from .get_available_gifts import GetAvailableGifts
@@ -26,6 +27,7 @@ from .get_gift_upgrade_preview import GetGiftUpgradePreview
 from .get_payment_form import GetPaymentForm
 from .get_stars_balance import GetStarsBalance
 from .get_ton_balance import GetTonBalance
+from .get_upgraded_gift_value_info import GetUpgradedGiftValueInfo
 from .get_upgraded_gift import GetUpgradedGift
 from .gift_premium_with_stars import GiftPremiumWithStars
 from .hide_gift import HideGift
@@ -42,6 +44,7 @@ from .upgrade_gift import UpgradeGift
 
 class Payments(
     ApplyGiftCode,
+    BuyGiftUpgrade,
     CheckGiftCode,
     ConvertGiftToStars,
     GetAvailableGifts,
@@ -51,6 +54,7 @@ class Payments(
     GetPaymentForm,
     GetStarsBalance,
     GetTonBalance,
+    GetUpgradedGiftValueInfo,
     GetUpgradedGift,
     GiftPremiumWithStars,
     HideGift,
