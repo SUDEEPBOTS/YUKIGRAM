@@ -1325,72 +1325,71 @@ class Client(Methods):
                 Create temporary session instead of getting from storage.
                 Used only when uploading/downloading and don't forget to stop it.
         """
-        async with self.sessions_lock:
-            is_current_dc = await self.storage.dc_id() == dc_id
+        is_current_dc = await self.storage.dc_id() == dc_id
 
-            if not temporary and is_current_dc and not is_media:
-                return self.session
+        if not temporary and is_current_dc and not is_media:
+            return self.session
 
-            sessions = self.media_sessions if is_media else self.sessions
+        sessions = self.media_sessions if is_media else self.sessions
 
-            if not temporary and sessions.get(dc_id):
-                return sessions[dc_id]
+        if not temporary and sessions.get(dc_id):
+            return sessions[dc_id]
 
-            dc_option = await self.get_dc_option(dc_id, is_media=is_media, ipv6=self.ipv6, is_cdn=is_cdn)
+        dc_option = await self.get_dc_option(dc_id, is_media=is_media, ipv6=self.ipv6, is_cdn=is_cdn)
 
-            if is_media:
-                auth_key = (await self.get_session(dc_id)).auth_key
+        if is_media:
+            auth_key = (await self.get_session(dc_id)).auth_key
+        else:
+            if not is_current_dc:
+                auth_key = await Auth(
+                    self,
+                    dc_id,
+                    server_address or dc_option.ip_address,
+                    port or dc_option.port,
+                    await self.storage.test_mode()
+                ).create()
             else:
-                if not is_current_dc:
-                    auth_key = await Auth(
-                        self,
-                        dc_id,
-                        server_address or dc_option.ip_address,
-                        port or dc_option.port,
-                        await self.storage.test_mode()
-                    ).create()
-                else:
-                    auth_key = await self.storage.auth_key()
+                auth_key = await self.storage.auth_key()
 
-            session = Session(
-                self,
-                dc_id,
-                server_address or dc_option.ip_address,
-                port or dc_option.port,
-                auth_key,
-                await self.storage.test_mode(),
-                is_media=is_media
-            )
+        session = Session(
+            self,
+            dc_id,
+            server_address or dc_option.ip_address,
+            port or dc_option.port,
+            auth_key,
+            await self.storage.test_mode(),
+            is_media=is_media
+        )
 
-            if not temporary:
-                sessions[dc_id] = session
+        if not temporary:
+            sessions[dc_id] = session
 
-            await session.start()
+        await session.start()
 
-            if not is_current_dc and export_authorization:
-                for _ in range(3):
-                    exported_auth = await self.invoke(
-                        raw.functions.auth.ExportAuthorization(
-                            dc_id=dc_id
+        if not is_current_dc and export_authorization:
+            for _ in range(3):
+                exported_auth = await self.invoke(
+                    raw.functions.auth.ExportAuthorization(
+                        dc_id=dc_id
+                    )
+                )
+
+                try:
+                    await session.invoke(
+                        raw.functions.auth.ImportAuthorization(
+                            id=exported_auth.id,
+                            bytes=exported_auth.bytes
                         )
                     )
-
-                    try:
-                        await session.invoke(
-                            raw.functions.auth.ImportAuthorization(
-                                id=exported_auth.id,
-                                bytes=exported_auth.bytes
-                            )
-                        )
-                    except AuthBytesInvalid:
-                        continue
-                    else:
-                        break
+                except AuthBytesInvalid:
+                    continue
                 else:
-                    await session.stop()
-                    raise AuthBytesInvalid
+                    break
+            else:
+                await session.stop()
+                raise AuthBytesInvalid
 
-            return session
+        return session
 
     async def get_dc_option(
         self,
