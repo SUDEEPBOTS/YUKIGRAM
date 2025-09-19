@@ -1290,9 +1290,10 @@ class Client(Methods):
 
     async def get_session(
         self,
-        dc_id: int,
+        dc_id: Optional[int] = None,
         is_media: Optional[bool] = False,
         is_cdn: Optional[bool] = False,
+        business_connection_id: Optional[str] = None,
         export_authorization: Optional[bool] = True,
         server_address: Optional[str] = None,
         port: Optional[int] = None,
@@ -1301,7 +1302,7 @@ class Client(Methods):
         """Get existing session or create a new one.
 
         Parameters:
-            dc_id (``int``):
+            dc_id (``int``, *optional*):
                 Datacenter identifier.
 
             is_media (``bool``, *optional*):
@@ -1309,6 +1310,9 @@ class Client(Methods):
 
             is_cdn (``bool``, *optional*):
                 Pass True to get or create a cdn session.
+
+            business_connection_id (``str``, *optional*):
+                Business connection identifier.
 
             export_authorization (``bool``, *optional*):
                 Pass True to export authorization after creating the session.
@@ -1326,6 +1330,21 @@ class Client(Methods):
                 Create temporary session instead of getting from storage.
                 Used only when uploading/downloading and don't forget to stop it.
         """
+        if not dc_id:
+            dc_id = await self.storage.dc_id()
+
+        if business_connection_id:
+            dc_id = self.business_connections.get(business_connection_id)
+
+            if dc_id is None:
+                connection = await self.session.invoke(
+                    raw.functions.account.GetBotBusinessConnection(
+                        connection_id=business_connection_id
+                    )
+                )
+
+                dc_id = self.business_connections[business_connection_id] = connection.updates[0].connection.dc_id
+
         is_current_dc = await self.storage.dc_id() == dc_id
 
         if not temporary and is_current_dc and not is_media:
