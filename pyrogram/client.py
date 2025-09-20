@@ -1426,8 +1426,7 @@ class Client(Methods):
         is_cdn: bool = False,
         ipv6: bool = False
     ) -> "raw.types.DcOption":
-        if not self.__config:
-            self.__config = await self.invoke(raw.functions.help.GetConfig())
+        self.__config = await self.invoke(raw.functions.help.GetConfig())
 
         if dc_id is None:
             dc_id = self.__config.this_dc
