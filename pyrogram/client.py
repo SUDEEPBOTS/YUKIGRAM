@@ -50,6 +50,7 @@ from pyrogram.errors import (
     SessionPasswordNeeded,
     Unauthorized,
     VolumeLocNotFound,
+    AuthTokenExpired
 )
 from pyrogram.handlers.handler import Handler
 from pyrogram.methods import Methods
@@ -655,6 +656,9 @@ class Client(Methods):
                     return signed_in
             except asyncio.TimeoutError:
                 log.info("Recreating QR code.")
+                await qr_login.recreate()
+            except AuthTokenExpired:
+                log.info("Auth token expired. Recreating QR code.")
                 await qr_login.recreate()
             except SessionPasswordNeeded as e:
                 print(e.MESSAGE)
