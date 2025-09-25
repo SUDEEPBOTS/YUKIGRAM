@@ -286,6 +286,7 @@ def pyrogram_api():
             get_discussion_message
             get_discussion_replies
             get_discussion_replies_count
+            get_main_web_app
             get_custom_emoji_stickers
             get_direct_messages_chat_topic_history
             delete_direct_messages_chat_topic_history
