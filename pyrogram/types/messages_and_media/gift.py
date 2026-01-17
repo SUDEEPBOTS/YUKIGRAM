@@ -308,7 +308,7 @@ class Gift(Object):
         transfer_star_count: Optional[int] = None,
         drop_original_details_star_count: Optional[int] = None,
         minimum_resell_star_count: Optional[int] = None,
-        miminum_offer_star_count: Optional[int] = None,
+        minimum_offer_star_count: Optional[int] = None,
         prepaid_upgrade_star_count: Optional[int] = None,
         prepaid_upgrade_hash: Optional[str] = None,
         auction_info: Optional["types.GiftAuction"] = None,
@@ -391,7 +391,7 @@ class Gift(Object):
         self.transfer_star_count = transfer_star_count
         self.drop_original_details_star_count = drop_original_details_star_count
         self.minimum_resell_star_count = minimum_resell_star_count
-        self.miminum_offer_star_count = miminum_offer_star_count
+        self.minimum_offer_star_count = minimum_offer_star_count
         self.prepaid_upgrade_star_count = prepaid_upgrade_star_count
         self.prepaid_upgrade_hash = prepaid_upgrade_hash
         self.auction_info = auction_info
@@ -540,7 +540,7 @@ class Gift(Object):
             is_premium=star_gift.require_premium,
             is_theme_available=star_gift.theme_available,
             max_upgraded_count=star_gift.availability_total,
-            miminum_offer_star_count=star_gift.offer_min_stars,
+            minimum_offer_star_count=star_gift.offer_min_stars,
             model=model,
             symbol=symbol,
             backdrop=backdrop,
