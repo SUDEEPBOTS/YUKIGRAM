@@ -1042,7 +1042,7 @@ class Message(Object, Update):
             proximity_alert_triggered = types.ProximityAlertTriggered._parse(client, action, users, chats)
         elif isinstance(action, raw.types.MessageActionGiftCode):
             service_type = enums.MessageServiceType.GIFT_CODE
-            gift_code = types.PremiumGiftCode._parse(client, action, users, chats)
+            gift_code = await types.PremiumGiftCode._parse(client, action, users, chats)
         elif isinstance(action, raw.types.MessageActionGiftPremium):
             service_type = enums.MessageServiceType.GIFTED_PREMIUM
             gifted_premium = await types.GiftedPremium._parse(
