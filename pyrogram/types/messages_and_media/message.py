@@ -8143,9 +8143,9 @@ class Message(Object, Update):
         parse_mode: Optional["enums.ParseMode"] = None,
         entities: Optional[List["types.MessageEntity"]] = None,
         link_preview_options: Optional["types.LinkPreviewOptions"] = None,
-        show_caption_above_media: Optional[bool] = None,
         reply_markup: Optional["types.InlineKeyboardMarkup"] = None,
 
+        show_caption_above_media: Optional[bool] = None,
         disable_web_page_preview: Optional[bool] = None,
     ) -> "Message":
         """Shortcut for method :obj:`~pyrogram.Client.edit_message_text` will automatically fill method attributes:
@@ -8173,9 +8173,6 @@ class Message(Object, Update):
             link_preview_options (:obj:`~pyrogram.types.LinkPreviewOptions`, *optional*):
                 Options used for link preview generation for the message.
 
-            show_caption_above_media (``bool``, *optional*):
-                Pass True, if the caption must be shown above the message media.
-
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup`, *optional*):
                 An InlineKeyboardMarkup object.
 
@@ -8192,10 +8189,10 @@ class Message(Object, Update):
             parse_mode=parse_mode,
             entities=entities,
             link_preview_options=link_preview_options,
-            show_caption_above_media=show_caption_above_media,
             business_connection_id=self.business_connection_id,
             reply_markup=reply_markup,
 
+            show_caption_above_media=show_caption_above_media,
             disable_web_page_preview=disable_web_page_preview,
         )
 
@@ -8206,7 +8203,8 @@ class Message(Object, Update):
         caption: str,
         parse_mode: Optional["enums.ParseMode"] = None,
         caption_entities: Optional[List["types.MessageEntity"]] = None,
-        reply_markup: Optional["types.InlineKeyboardMarkup"] = None
+        reply_markup: Optional["types.InlineKeyboardMarkup"] = None,
+        show_caption_above_media: Optional[bool] = None
     ) -> "Message":
         """Shortcut for method :obj:`~pyrogram.Client.edit_message_caption` will automatically fill method attributes:
 
@@ -8225,6 +8223,10 @@ class Message(Object, Update):
             caption_entities (List of :obj:`~pyrogram.types.MessageEntity`):
                 List of special entities that appear in the caption, which can be specified instead of *parse_mode*.
 
+            show_caption_above_media (``bool``, *optional*):
+                Pass True, if the caption must be shown above the message media.
+                Supported only for animation, photo and video messages.
+
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup`, *optional*):
                 An InlineKeyboardMarkup object.
 
@@ -8241,6 +8243,7 @@ class Message(Object, Update):
             parse_mode=parse_mode,
             caption_entities=caption_entities,
             business_connection_id=self.business_connection_id,
+            show_caption_above_media=show_caption_above_media,
             reply_markup=reply_markup
         )
 
