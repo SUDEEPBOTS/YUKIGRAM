@@ -794,6 +794,8 @@ def pyrogram_api():
             SavedCredentials
             PaymentResult
             ChatBoost
+            ChatOwnerChanged
+            ChatOwnerLeft
             ContactRegistered
             ScreenshotTaken
             StarAmount

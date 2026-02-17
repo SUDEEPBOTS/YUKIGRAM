@@ -26,6 +26,8 @@ from .boosts_status import BoostsStatus
 from .business_message import BusinessMessage
 from .chat_background import ChatBackground
 from .chat_boost import ChatBoost
+from .chat_owner_changed import ChatOwnerChanged
+from .chat_owner_left import ChatOwnerLeft
 from .chat_theme import ChatTheme
 from .checked_gift_code import CheckedGiftCode
 from .checklist_task import ChecklistTask
@@ -149,6 +151,8 @@ __all__ = [
     "BusinessMessage",
     "ChatBackground",
     "ChatBoost",
+    "ChatOwnerChanged",
+    "ChatOwnerLeft",
     "ChatTheme",
     "CheckedGiftCode",
     "ChecklistTask",

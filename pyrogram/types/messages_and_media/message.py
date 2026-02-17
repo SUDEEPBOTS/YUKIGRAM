@@ -270,6 +270,12 @@ class Message(Object, Update):
         left_chat_member (:obj:`~pyrogram.types.User`, *optional*):
             A member was removed from the group, information about them (this member may be the bot itself).
 
+        chat_owner_left (:obj:`~pyrogram.types.ChatOwnerLeft`, *optional*):
+            Service message: chat owner has left.
+
+        chat_owner_changed (:obj:`~pyrogram.types.ChatOwnerChanged`, *optional*):
+            Service message: chat owner has changed.
+
         chat_join_type (:obj:`~pyrogram.enums.ChatJoinType`, *optional*):
             This field will contain the enumeration type of how the user had joined the chat.
 
@@ -633,6 +639,8 @@ class Message(Object, Update):
         dice: Optional["types.Dice"] = None,
         new_chat_members: Optional[List["types.User"]] = None,
         left_chat_member: Optional["types.User"] = None,
+        chat_owner_left: Optional["types.ChatOwnerLeft"] = None,
+        chat_owner_changed: Optional["types.ChatOwnerChanged"] = None,
         chat_join_type: Optional["enums.ChatJoinType"] = None,
         new_chat_title: Optional[str] = None,
         new_chat_photo: Optional["types.Photo"] = None,
@@ -793,6 +801,8 @@ class Message(Object, Update):
         self.dice = dice
         self.new_chat_members = new_chat_members
         self.left_chat_member = left_chat_member
+        self.chat_owner_left = chat_owner_left
+        self.chat_owner_changed = chat_owner_changed
         self.chat_join_type = chat_join_type
         self.new_chat_title = new_chat_title
         self.new_chat_photo = new_chat_photo
@@ -921,6 +931,8 @@ class Message(Object, Update):
         group_chat_created = None
         delete_chat_photo = None
         left_chat_member = None
+        chat_owner_left = None
+        chat_owner_changed = None
         new_chat_photo = None
         new_chat_title = None
         migrate_to_chat_id = None
@@ -1013,6 +1025,12 @@ class Message(Object, Update):
         elif isinstance(action, raw.types.MessageActionChatDeleteUser):
             service_type = enums.MessageServiceType.LEFT_CHAT_MEMBER
             left_chat_member = types.User._parse(client, users[action.user_id])
+        elif isinstance(action, raw.types.MessageActionNewCreatorPending):
+            service_type = enums.MessageServiceType.CHAT_OWNER_LEFT
+            chat_owner_left = types.ChatOwnerLeft._parse(client, action, users)
+        elif isinstance(action, raw.types.MessageActionChangeCreator):
+            service_type = enums.MessageServiceType.CHAT_OWNER_CHANGED
+            chat_owner_changed = types.ChatOwnerChanged._parse(client, action, users)
         elif isinstance(action, raw.types.MessageActionChatEditPhoto):
             service_type = enums.MessageServiceType.NEW_CHAT_PHOTO
             new_chat_photo = types.Photo._parse(client, action.photo)
@@ -1247,6 +1265,8 @@ class Message(Object, Update):
             group_chat_created=group_chat_created,
             delete_chat_photo=delete_chat_photo,
             left_chat_member=left_chat_member,
+            chat_owner_left=chat_owner_left,
+            chat_owner_changed=chat_owner_changed,
             new_chat_photo=new_chat_photo,
             new_chat_title=new_chat_title,
             migrate_to_chat_id=migrate_to_chat_id,
