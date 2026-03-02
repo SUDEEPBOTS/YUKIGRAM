@@ -69,7 +69,7 @@ class SendMessageDraft:
                     random_id=draft_id,
                     text=await types.FormattedText(
                         text=text, parse_mode=parse_mode, entities=entities
-                    ).write(),
+                    ).write(self),
                 ),
                 top_msg_id=message_thread_id,
             )
