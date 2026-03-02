@@ -243,6 +243,7 @@ def pyrogram_api():
             send_voice
             send_video_note
             send_media_group
+            send_message_draft
             send_location
             send_venue
             send_contact
