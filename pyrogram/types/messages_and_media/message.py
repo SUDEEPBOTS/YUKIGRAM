@@ -78,6 +78,10 @@ class Message(Object, Update):
         sender_business_bot (:obj:`~pyrogram.types.User`, *optional*):
             The bot that actually sent the message on behalf of the business account. Available only for outgoing messages sent on behalf of the connected business account.
 
+        sender_tag (``str``, *optional*):
+            Tag or custom title of the sender of the message.
+            For supergroups only.
+
         date (:py:obj:`~datetime.datetime`, *optional*):
             Date the message was sent.
 
@@ -579,6 +583,7 @@ class Message(Object, Update):
         sender_chat: Optional["types.Chat"] = None,
         sender_boost_count: Optional[int] = None,
         sender_business_bot: Optional["types.User"] = None,
+        sender_tag: Optional[str] = None,
         date: Optional[datetime] = None,
         chat: Optional["types.Chat"] = None,
         topic_message: Optional[bool] = None,
@@ -742,6 +747,7 @@ class Message(Object, Update):
         self.sender_chat = sender_chat
         self.sender_boost_count = sender_boost_count
         self.sender_business_bot = sender_business_bot
+        self.sender_tag = sender_tag
         self.date = date
         self.chat = chat
         self.topic_message = topic_message
@@ -1586,6 +1592,7 @@ class Message(Object, Update):
                 client,
                 users.get(getattr(message, "via_business_bot_id", None))
             ),
+            sender_tag=message.from_rank,
             text=(
                 Str(message.message).init(entities) or None
                 if media is None or web_page is not None
