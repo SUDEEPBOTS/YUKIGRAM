@@ -34,7 +34,7 @@ from .ping_delay_disconnect import PingDelayDisconnect
 from .destroy_session import DestroySession
 from .bool_false import BoolFalse
 from .bool_true import BoolTrue
-from .true import True
+from .true import True_
 from .error import Error
 from .null import Null
 from .input_peer_empty import InputPeerEmpty
