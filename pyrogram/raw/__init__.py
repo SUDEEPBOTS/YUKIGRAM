@@ -23,4 +23,6 @@ from .all import objects
 
 for k, v in objects.items():
     path, name = v.rsplit(".", 1)
-    objects[k] = getattr(import_module(path), name)
+    # 🧠 Sudeep's Master Patch: Redirect "True" to "True_" safely
+    objects[k] = getattr(import_module(path), "True_" if name == "True" else name)
+    
