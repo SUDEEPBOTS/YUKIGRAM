@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-class True(TLObject["raw.base.True"]):
+class True_(TLObject["raw.base.True"]):
     """Telegram API function.
 
     Details:
@@ -55,10 +55,10 @@ class True(TLObject["raw.base.True"]):
         pass
 
     @staticmethod
-    def read(b: BytesIO, *args: Any) -> "True":
+    def read(b: BytesIO, *args: Any) -> "True_":
         # No flags
         
-        return True()
+        return True_()
 
     def write(self, *args) -> bytes:
         b = BytesIO()
@@ -67,3 +67,4 @@ class True(TLObject["raw.base.True"]):
         # No flags
         
         return b.getvalue()
+        
